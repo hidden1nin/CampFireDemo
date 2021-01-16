@@ -2,13 +2,14 @@ package com.hiddentech.campfiredemo;
 
 import com.hiddentech.grid.GridPlugin;
 import com.hiddentech.grid.events.PlayerObjectRangeEvent;
-import com.hiddentech.grid.objects.TickingRangeObject;
+import com.hiddentech.grid.objects.RangeObject;
+import com.hiddentech.grid.objects.ticking.TickingObject;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-public class CampFire extends TickingRangeObject {
+public class CampFire implements RangeObject, TickingObject {
     private boolean loaded;
     private Location location;
     public CampFire(Location location){
@@ -51,5 +52,10 @@ public class CampFire extends TickingRangeObject {
     @Override
     public Location getLocation() {
         return this.location;
+    }
+
+    @Override
+    public void tick() {
+
     }
 }
