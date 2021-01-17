@@ -11,5 +11,10 @@ public class BlockPlaceListener implements Listener {
         if(event.getBlock().getType()== Material.CAMPFIRE){
             new CampFire(event.getBlock().getLocation());
         }
+        if(event.getBlock().getType()== Material.BLUE_STAINED_GLASS){
+
+            event.getBlock().setType(Material.GLASS);
+            new Beacon(event.getBlock());
+        }
     }
 }

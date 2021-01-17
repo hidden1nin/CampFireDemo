@@ -2,19 +2,28 @@ package com.hiddentech.campfiredemo;
 
 import com.hiddentech.grid.GridPlugin;
 import com.hiddentech.grid.events.PlayerObjectRangeEvent;
+import com.hiddentech.grid.objects.InventoryObject;
 import com.hiddentech.grid.objects.RangeObject;
+import com.hiddentech.grid.objects.block.InteractBlockObject;
 import com.hiddentech.grid.objects.ticking.TickingObject;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.block.Block;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-public class CampFire implements RangeObject, TickingObject {
+public class CampFire implements RangeObject, TickingObject, InteractBlockObject, InventoryObject {
     private boolean loaded;
     private Location location;
+    private Inventory storage;
     public CampFire(Location location){
         this.location = location;
         this.loaded = false;
+        this.storage = Bukkit.createInventory(this,9, ChatColor.GOLD+"Camp Fire");
         GridPlugin.getGridAPI().insertObject(this);
     }
     @Override
@@ -57,5 +66,21 @@ public class CampFire implements RangeObject, TickingObject {
     @Override
     public void tick() {
 
+    }
+
+    @Override
+    public Block getBlock() {
+        return this.location.getBlock();
+    }
+
+    @Override
+    public void run(PlayerInteractEvent playerInteractEvent) {
+        playerInteractEvent.getPlayer().sendMessage("clicked and ran");
+        playerInteractEvent.getPlayer().openInventory(storage);
+    }
+
+    @Override
+    public Inventory getInventory() {
+        return this.storage;
     }
 }
