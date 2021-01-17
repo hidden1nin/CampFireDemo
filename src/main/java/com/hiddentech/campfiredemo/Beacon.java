@@ -2,20 +2,19 @@ package com.hiddentech.campfiredemo;
 
 import com.hiddentech.grid.GridPlugin;
 import com.hiddentech.grid.events.PlayerObjectRangeEvent;
-import com.hiddentech.grid.grid.GridAPI;
+import com.hiddentech.grid.objects.Holos.HologramObject;
 import com.hiddentech.grid.objects.InventoryObject;
 import com.hiddentech.grid.objects.RangeObject;
-import com.hiddentech.grid.objects.block.CustomBlock;
 import com.hiddentech.grid.objects.block.DestroyBlockObject;
 import com.hiddentech.grid.objects.block.InteractBlockObject;
-import com.hiddentech.grid.objects.entity.EntityObject;
-import com.hiddentech.grid.objects.entity.HologramObject;
 import com.hiddentech.grid.objects.ticking.TickingObject;
 import com.hiddentech.grid.utilities.Hologram;
+import com.hiddentech.grid.utilities.ItemUtility;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -26,7 +25,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
 
-public class Beacon implements HologramObject, InteractBlockObject, DestroyBlockObject, InventoryObject, RangeObject, TickingObject {
+public class Beacon implements HologramObject, InteractBlockObject, DestroyBlockObject, RangeObject,TickingObject,InventoryObject {
     private Location location;
     private Block block;
     private Entity hologram;
@@ -34,7 +33,7 @@ public class Beacon implements HologramObject, InteractBlockObject, DestroyBlock
 
     private BukkitTask spinner;
     private Inventory inventory;
-
+    private PotionEffect effect;
     public Beacon(Block block){
         this.loaded = false;
         this.block = block;
@@ -44,8 +43,20 @@ public class Beacon implements HologramObject, InteractBlockObject, DestroyBlock
         GridPlugin.getGridAPI().insertObject(this);
         loadHolograms();
         load();
+        loadInventory();
+        this.effect = new PotionEffect(PotionEffectType.SPEED,100,0);
         GridPlugin.getGridHandler().getLoaded().put(this, (short) 2);
     }
+
+    private void loadInventory() {
+        this.inventory.clear();
+        ItemUtility.fillInventory(this.inventory,ItemUtility.background());
+
+        ItemUtility.createItem(Material.SUGAR,this.inventory,1,ChatColor.GRAY+"Speed","");
+        ItemUtility.createItem(Material.DIAMOND_CHESTPLATE,this.inventory,4,ChatColor.GRAY+"Resistance","");
+        ItemUtility.createItem(Material.DIAMOND_SWORD,this.inventory,7,ChatColor.GRAY+"Strength","");
+    }
+
     @Override
     public Block getBlock() {
         return this.block;
@@ -111,7 +122,12 @@ public class Beacon implements HologramObject, InteractBlockObject, DestroyBlock
 
     @Override
     public void run(PlayerInteractEvent playerInteractEvent) {
+        //TODO fix bug where players arent put into hashmap properly
         playerInteractEvent.getPlayer().openInventory(this.inventory);
+        GridPlugin.getInventoryHandler().getTickingInventories().remove(playerInteractEvent.getPlayer());
+        GridPlugin.getInventoryHandler().getTickingInventories().put(playerInteractEvent.getPlayer(),(InventoryObject)this);
+
+
     }
 
     @Override
@@ -121,6 +137,11 @@ public class Beacon implements HologramObject, InteractBlockObject, DestroyBlock
         unloadHolograms();
         GridPlugin.getGridAPI().removeObject(this);
         blockBreakEvent.setDropItems(false);
+        /*for(ItemStack itemStack:this.inventory.getContents()){
+            if(itemStack==null) continue;
+            blockBreakEvent.getBlock().getWorld().dropItemNaturally(blockBreakEvent.getBlock().getLocation(),itemStack);
+        }
+        */
         blockBreakEvent.getBlock().getWorld().dropItemNaturally(blockBreakEvent.getBlock().getLocation(),new ItemStack(Material.BLUE_STAINED_GLASS, 1));
     }
 
@@ -136,12 +157,28 @@ public class Beacon implements HologramObject, InteractBlockObject, DestroyBlock
 
     @Override
     public void run(PlayerObjectRangeEvent event) {
-        event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SPEED,100,0));
+        event.getPlayer().addPotionEffect(this.effect);
         event.getObject().getLocation().getWorld().spawnParticle(Particle.VILLAGER_ANGRY,event.getObject().getLocation().clone().add(.5,1,.5),5);
     }
 
     @Override
     public void tick() {
-        //do nothing im doing this because i want to have range event tick
+        //
     }
+
+    @Override
+    public void run(InventoryClickEvent inventoryClickEvent) {
+        inventoryClickEvent.setCancelled(true);
+        if(inventoryClickEvent.getCurrentItem()==null)return;
+        if(inventoryClickEvent.getCurrentItem().getType()==Material.SUGAR){
+            this.effect = new PotionEffect(PotionEffectType.SPEED,100,0);
+            inventoryClickEvent.getWhoClicked().sendMessage(ChatColor.GRAY+"Selected Speed");}
+        if(inventoryClickEvent.getCurrentItem().getType()==Material.DIAMOND_CHESTPLATE){
+            this.effect = new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,100,0);
+            inventoryClickEvent.getWhoClicked().sendMessage(ChatColor.GRAY+"Selected Resistance");}
+        if(inventoryClickEvent.getCurrentItem().getType()==Material.DIAMOND_SWORD){
+            inventoryClickEvent.getWhoClicked().sendMessage(ChatColor.GRAY+"Selected Strength");
+            this.effect = new PotionEffect(PotionEffectType.INCREASE_DAMAGE,100,0);}
+    }
+
 }

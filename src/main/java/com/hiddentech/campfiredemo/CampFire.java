@@ -4,19 +4,20 @@ import com.hiddentech.grid.GridPlugin;
 import com.hiddentech.grid.events.PlayerObjectRangeEvent;
 import com.hiddentech.grid.objects.InventoryObject;
 import com.hiddentech.grid.objects.RangeObject;
+import com.hiddentech.grid.objects.block.DestroyBlockObject;
 import com.hiddentech.grid.objects.block.InteractBlockObject;
 import com.hiddentech.grid.objects.ticking.TickingObject;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Particle;
+import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-public class CampFire implements RangeObject, TickingObject, InteractBlockObject, InventoryObject {
+public class CampFire implements RangeObject, TickingObject, InteractBlockObject, InventoryObject, DestroyBlockObject {
     private boolean loaded;
     private Location location;
     private Inventory storage;
@@ -75,12 +76,30 @@ public class CampFire implements RangeObject, TickingObject, InteractBlockObject
 
     @Override
     public void run(PlayerInteractEvent playerInteractEvent) {
-        playerInteractEvent.getPlayer().sendMessage("clicked and ran");
         playerInteractEvent.getPlayer().openInventory(storage);
     }
 
     @Override
     public Inventory getInventory() {
         return this.storage;
+    }
+
+    @Override
+    public void run(InventoryClickEvent inventoryClickEvent) {
+
+    }
+
+    @Override
+    public void run(BlockBreakEvent blockBreakEvent) {
+        blockBreakEvent.setCancelled(false);
+        unload();
+        GridPlugin.getGridAPI().removeObject(this);
+        blockBreakEvent.setDropItems(false);
+        for(ItemStack itemStack:this.storage.getContents()){
+            if(itemStack==null) continue;
+            blockBreakEvent.getBlock().getWorld().dropItemNaturally(blockBreakEvent.getBlock().getLocation(),itemStack);
+        }
+        blockBreakEvent.getBlock().getWorld().dropItemNaturally(blockBreakEvent.getBlock().getLocation(),new ItemStack(Material.CAMPFIRE, 1));
+
     }
 }
