@@ -2,12 +2,12 @@ package com.hiddentech.campfiredemo;
 
 import com.hiddentech.grid.GridPlugin;
 import com.hiddentech.grid.events.PlayerObjectRangeEvent;
-import com.hiddentech.grid.objects.Holos.HologramObject;
-import com.hiddentech.grid.objects.InventoryObject;
-import com.hiddentech.grid.objects.RangeObject;
-import com.hiddentech.grid.objects.block.DestroyBlockObject;
-import com.hiddentech.grid.objects.block.InteractBlockObject;
-import com.hiddentech.grid.objects.ticking.TickingObject;
+import com.hiddentech.grid.objects.Holos.SingleHologram;
+import com.hiddentech.grid.objects.Inventoried;
+import com.hiddentech.grid.objects.Ranged;
+import com.hiddentech.grid.objects.block.Destroyable;
+import com.hiddentech.grid.objects.block.Interactable;
+import com.hiddentech.grid.objects.ticking.Ticking;
 import com.hiddentech.grid.utilities.Hologram;
 import com.hiddentech.grid.utilities.ItemUtility;
 import org.bukkit.*;
@@ -23,9 +23,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.ArrayList;
-
-public class Beacon implements HologramObject, InteractBlockObject, DestroyBlockObject, RangeObject,TickingObject,InventoryObject {
+public class Beacon implements SingleHologram, Interactable, Destroyable, Ranged, Ticking, Inventoried {
     private Location location;
     private Block block;
     private Entity hologram;
@@ -125,7 +123,7 @@ public class Beacon implements HologramObject, InteractBlockObject, DestroyBlock
         //TODO fix bug where players arent put into hashmap properly
         playerInteractEvent.getPlayer().openInventory(this.inventory);
         GridPlugin.getInventoryHandler().getTickingInventories().remove(playerInteractEvent.getPlayer());
-        GridPlugin.getInventoryHandler().getTickingInventories().put(playerInteractEvent.getPlayer(),(InventoryObject)this);
+        GridPlugin.getInventoryHandler().getTickingInventories().put(playerInteractEvent.getPlayer(),(Inventoried)this);
 
 
     }

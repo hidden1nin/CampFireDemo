@@ -2,11 +2,11 @@ package com.hiddentech.campfiredemo;
 
 import com.hiddentech.grid.GridPlugin;
 import com.hiddentech.grid.events.PlayerObjectRangeEvent;
-import com.hiddentech.grid.objects.InventoryObject;
-import com.hiddentech.grid.objects.RangeObject;
-import com.hiddentech.grid.objects.block.DestroyBlockObject;
-import com.hiddentech.grid.objects.block.InteractBlockObject;
-import com.hiddentech.grid.objects.ticking.TickingObject;
+import com.hiddentech.grid.objects.Inventoried;
+import com.hiddentech.grid.objects.Ranged;
+import com.hiddentech.grid.objects.block.Destroyable;
+import com.hiddentech.grid.objects.block.Interactable;
+import com.hiddentech.grid.objects.ticking.Ticking;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -17,7 +17,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-public class CampFire implements RangeObject, TickingObject, InteractBlockObject, InventoryObject, DestroyBlockObject {
+public class CampFire implements Ranged, Ticking, Interactable, Inventoried, Destroyable {
     private boolean loaded;
     private Location location;
     private Inventory storage;
