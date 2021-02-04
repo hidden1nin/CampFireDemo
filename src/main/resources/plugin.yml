@@ -2,6 +2,6 @@ name: CampFireDemo
 version: ${project.version}
 main: com.hiddentech.campfiredemo.CampFireDemo
 api-version: 1.16
-depend: [Grid]
+depend: [Grid,Persistence]
 authors: [hidden1nin]
 description: Makes campfires give healing and demos gridutil

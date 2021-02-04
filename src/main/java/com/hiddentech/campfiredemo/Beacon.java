@@ -7,12 +7,17 @@ import com.hiddentech.grid.objects.Inventoried;
 import com.hiddentech.grid.objects.Ranged;
 import com.hiddentech.grid.objects.block.Destroyable;
 import com.hiddentech.grid.objects.block.Interactable;
+import com.hiddentech.grid.objects.block.PistonBreakable;
 import com.hiddentech.grid.objects.ticking.Ticking;
 import com.hiddentech.grid.utilities.Hologram;
 import com.hiddentech.grid.utilities.ItemUtility;
+import com.hiddentech.persistantance.ObjectData;
+import com.hiddentech.persistantance.Persistence;
+import com.hiddentech.persistantance.types.PersistentLocation;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -23,7 +28,9 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-public class Beacon implements SingleHologram, Interactable, Destroyable, Ranged, Ticking, Inventoried {
+import java.util.Arrays;
+
+public class Beacon implements SingleHologram, Interactable, PistonBreakable, Ranged, Ticking, Inventoried, PersistentLocation {
     private Location location;
     private Block block;
     private Entity hologram;
@@ -31,10 +38,24 @@ public class Beacon implements SingleHologram, Interactable, Destroyable, Ranged
 
     private BukkitTask spinner;
     private Inventory inventory;
-    private PotionEffect effect;
-    public Beacon(Block block){
+    private  PotionEffect effect;
+    private int id;
+    public Beacon(ObjectData objectData){
         this.loaded = false;
-        this.block = block;
+        this.block = objectData.getLocation().getBlock();
+        this.location = block.getLocation();
+        this.id = objectData.getId();
+        this.inventory = Bukkit.createInventory(this,9, ChatColor.GOLD+"Beacon Demo");
+        GridPlugin.getGridAPI().insertObject(this);
+        loadHolograms();
+        load();
+        loadInventory();
+        this.effect = new PotionEffect(PotionEffectType.SPEED,100,0);
+        GridPlugin.getGridHandler().getLoaded().put(this, (short) 2);
+    }
+    public Beacon(Location location){
+        this.loaded = false;
+        this.block = location.getBlock();
         this.location = block.getLocation();
 
         this.inventory = Bukkit.createInventory(this,9, ChatColor.GOLD+"Beacon Demo");
@@ -44,6 +65,8 @@ public class Beacon implements SingleHologram, Interactable, Destroyable, Ranged
         loadInventory();
         this.effect = new PotionEffect(PotionEffectType.SPEED,100,0);
         GridPlugin.getGridHandler().getLoaded().put(this, (short) 2);
+        this.id = Persistence.getApi().getNextID("Beacons");
+        Persistence.getApi().save("Beacons",this);
     }
 
     private void loadInventory() {
@@ -55,9 +78,15 @@ public class Beacon implements SingleHologram, Interactable, Destroyable, Ranged
         ItemUtility.createItem(Material.DIAMOND_SWORD,this.inventory,7,ChatColor.GRAY+"Strength","");
     }
 
+
     @Override
     public Block getBlock() {
         return this.block;
+    }
+
+    @Override
+    public String getName() {
+        return "Mini Beacon";
     }
 
     @Override
@@ -88,11 +117,18 @@ public class Beacon implements SingleHologram, Interactable, Destroyable, Ranged
         this.loaded = false;
     }
 
+
+    @Override
+    public int getId() {
+        return this.id;
+    }
+
     @Override
     public void destroy() {
         unload();
-        hologram.remove();
-
+        unloadHolograms();
+        GridPlugin.getGridAPI().removeObject(this);
+        Persistence.getApi().delete("Beacons",this);
     }
 
     @Override
@@ -120,27 +156,31 @@ public class Beacon implements SingleHologram, Interactable, Destroyable, Ranged
 
     @Override
     public void run(PlayerInteractEvent playerInteractEvent) {
-        //TODO fix bug where players arent put into hashmap properly
+        if(playerInteractEvent.getAction()!= Action.RIGHT_CLICK_BLOCK)return;
         playerInteractEvent.getPlayer().openInventory(this.inventory);
         GridPlugin.getInventoryHandler().getTickingInventories().remove(playerInteractEvent.getPlayer());
         GridPlugin.getInventoryHandler().getTickingInventories().put(playerInteractEvent.getPlayer(),(Inventoried)this);
 
+        playerInteractEvent.setCancelled(true);
 
     }
 
     @Override
     public void run(BlockBreakEvent blockBreakEvent) {
         blockBreakEvent.setCancelled(false);
-        unload();
-        unloadHolograms();
-        GridPlugin.getGridAPI().removeObject(this);
         blockBreakEvent.setDropItems(false);
         /*for(ItemStack itemStack:this.inventory.getContents()){
             if(itemStack==null) continue;
             blockBreakEvent.getBlock().getWorld().dropItemNaturally(blockBreakEvent.getBlock().getLocation(),itemStack);
         }
         */
-        blockBreakEvent.getBlock().getWorld().dropItemNaturally(blockBreakEvent.getBlock().getLocation(),new ItemStack(Material.BLUE_STAINED_GLASS, 1));
+        destroy();
+        blockBreakEvent.getBlock().getWorld().dropItemNaturally(blockBreakEvent.getBlock().getLocation(),GridPlugin.getItemHandler().getCustomItemByTag("MINI-BEACON").getItem());
+    }
+
+    @Override
+    public String getDrops() {
+        return "Mini Beacon*1";
     }
 
     @Override

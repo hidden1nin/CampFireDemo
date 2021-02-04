@@ -2,30 +2,36 @@ package com.hiddentech.campfiredemo;
 
 import com.hiddentech.grid.GridPlugin;
 import com.hiddentech.grid.events.PlayerObjectRangeEvent;
-import com.hiddentech.grid.objects.Inventoried;
 import com.hiddentech.grid.objects.Ranged;
 import com.hiddentech.grid.objects.block.Destroyable;
-import com.hiddentech.grid.objects.block.Interactable;
 import com.hiddentech.grid.objects.ticking.Ticking;
+import com.hiddentech.persistantance.ObjectData;
+import com.hiddentech.persistantance.Persistence;
+import com.hiddentech.persistantance.types.PersistentLocation;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-public class CampFire implements Ranged, Ticking, Interactable, Inventoried, Destroyable {
+
+public class CampFire implements Ranged, Ticking, Destroyable, PersistentLocation {
     private boolean loaded;
     private Location location;
-    private Inventory storage;
+    private int id;
+    public CampFire(ObjectData objectData){
+        this.location = objectData.getLocation();
+        this.loaded = false;
+        GridPlugin.getGridAPI().insertObject(this);
+        this.id = objectData.getId();
+    }
     public CampFire(Location location){
         this.location = location;
         this.loaded = false;
-        this.storage = Bukkit.createInventory(this,9, ChatColor.GOLD+"Camp Fire");
         GridPlugin.getGridAPI().insertObject(this);
+        this.id = Persistence.getApi().getNextID("Campfires");
+        Persistence.getApi().save("Campfires",this);
     }
     @Override
     public int getDistance() {
@@ -54,9 +60,15 @@ public class CampFire implements Ranged, Ticking, Interactable, Inventoried, Des
     }
 
     @Override
+    public int getId() {
+        return this.id;
+    }
+
+    @Override
     public void destroy() {
         GridPlugin.getGridAPI().removeObject(this);
         unload();
+        Persistence.getApi().delete("Campfires",this);
     }
 
     @Override
@@ -75,31 +87,22 @@ public class CampFire implements Ranged, Ticking, Interactable, Inventoried, Des
     }
 
     @Override
-    public void run(PlayerInteractEvent playerInteractEvent) {
-        playerInteractEvent.getPlayer().openInventory(storage);
-    }
-
-    @Override
-    public Inventory getInventory() {
-        return this.storage;
-    }
-
-    @Override
-    public void run(InventoryClickEvent inventoryClickEvent) {
-
+    public String getName() {
+        return "Healing Camp Fire";
     }
 
     @Override
     public void run(BlockBreakEvent blockBreakEvent) {
         blockBreakEvent.setCancelled(false);
-        unload();
-        GridPlugin.getGridAPI().removeObject(this);
+        destroy();
         blockBreakEvent.setDropItems(false);
-        for(ItemStack itemStack:this.storage.getContents()){
-            if(itemStack==null) continue;
-            blockBreakEvent.getBlock().getWorld().dropItemNaturally(blockBreakEvent.getBlock().getLocation(),itemStack);
-        }
         blockBreakEvent.getBlock().getWorld().dropItemNaturally(blockBreakEvent.getBlock().getLocation(),new ItemStack(Material.CAMPFIRE, 1));
 
     }
+
+    @Override
+    public String getDrops() {
+        return "Camp Fire*1";
+    }
+
 }
