@@ -2,7 +2,7 @@ package com.hiddentech.campfiredemo;
 
 import com.hiddentech.grid.GridPlugin;
 import com.hiddentech.grid.objects.Chattable;
-import com.hiddentech.grid.objects.Holos.SingleHologram;
+import com.hiddentech.grid.objects.Holos.IHologram;
 import com.hiddentech.grid.objects.block.Destroyable;
 import com.hiddentech.grid.objects.block.Interactable;
 import com.hiddentech.grid.utilities.StringUtils;
@@ -12,22 +12,23 @@ import com.hiddentech.persistantance.types.PersistentLocation;
 import com.hiddentech.persistantance.types.PersistentString;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.EquipmentSlot;
 
-public class Hologram implements SingleHologram,Interactable, Destroyable, Chattable, PersistentLocation, PersistentString {
+import java.util.ArrayList;
+
+public class Hologram implements IHologram,Interactable, Destroyable, Chattable, PersistentLocation, PersistentString {
     private Boolean loaded;
     private final Location location;
     private final Block block;
-    private Entity holo;
+    //private Entity holo;
     private String text;
     private int id;
+    private ArrayList<com.hiddentech.grid.utilities.Hologram> hologram = new ArrayList<>();
 
     public Hologram(ObjectData objectData){
 
@@ -36,8 +37,8 @@ public class Hologram implements SingleHologram,Interactable, Destroyable, Chatt
         this.block = location.getBlock();
         GridPlugin.getGridAPI().insertObject(this);
         this.text = StringUtils.colorCode(objectData.getString());
-
-        loadHolograms();
+        this.hologram.add(new com.hiddentech.grid.utilities.Hologram(location.clone().add(.5,1,.5),text));
+        //loadHolograms();
         load();
         GridPlugin.getGridHandler().getLoaded().put(this, (short) 2);
         this.id = objectData.getId();
@@ -48,7 +49,8 @@ public class Hologram implements SingleHologram,Interactable, Destroyable, Chatt
         this.block = location.getBlock();
         GridPlugin.getGridAPI().insertObject(this);
         this.text = "New Hologram";
-        loadHolograms();
+        //loadHolograms();
+        this.hologram.add(new com.hiddentech.grid.utilities.Hologram(location.clone().add(.5,1,.5),text));
         load();
         GridPlugin.getGridHandler().getLoaded().put(this, (short) 2);
         this.id = Persistence.getApi().getNextID("HoloDemo");
@@ -64,8 +66,7 @@ public class Hologram implements SingleHologram,Interactable, Destroyable, Chatt
     }
     @Override
     public void run(AsyncPlayerChatEvent asyncPlayerChatEvent) {
-        this.holo.setCustomName(StringUtils.colorCode(asyncPlayerChatEvent.getMessage()));
-        this.holo.setCustomNameVisible(true);
+        hologram.get(hologram.size()-1).setName(StringUtils.colorCode(asyncPlayerChatEvent.getMessage()));
         this.text = asyncPlayerChatEvent.getMessage();
         asyncPlayerChatEvent.getPlayer().sendMessage("Text set \""+asyncPlayerChatEvent.getMessage()+"\"");
         Persistence.getApi().save("HoloDemo",this);
@@ -74,6 +75,8 @@ public class Hologram implements SingleHologram,Interactable, Destroyable, Chatt
 
     @Override
     public void run(BlockBreakEvent blockBreakEvent) {
+        blockBreakEvent.setDropItems(false);
+        blockBreakEvent.getBlock().getWorld().dropItemNaturally(blockBreakEvent.getBlock().getLocation(),GridPlugin.getItemHandler().getCustomItemByTag("HOLOGRAM").getItem());
         destroy();
     }
     @Override
@@ -112,7 +115,7 @@ public class Hologram implements SingleHologram,Interactable, Destroyable, Chatt
     @Override
     public void destroy() {
         unload();
-        unloadHolograms();
+        //unloadHolograms();
         GridPlugin.getGridAPI().removeObject(this);
         Persistence.getApi().delete("HoloDemo",this);
     }
@@ -122,7 +125,7 @@ public class Hologram implements SingleHologram,Interactable, Destroyable, Chatt
         return this.location;
     }
 
-
+/*
     @Override
     public Entity currentHolograms() {
         return this.holo;
@@ -138,9 +141,14 @@ public class Hologram implements SingleHologram,Interactable, Destroyable, Chatt
         GridPlugin.getHologramHandler().unload(this.holo);
         this.holo.remove();
     }
-
+*/
     @Override
     public String getString() {
         return this.text;
+    }
+
+    @Override
+    public ArrayList<com.hiddentech.grid.utilities.Hologram> currentHolograms() {
+        return hologram;
     }
 }

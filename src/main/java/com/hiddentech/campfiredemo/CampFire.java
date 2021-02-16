@@ -76,10 +76,6 @@ public class CampFire implements Ranged, Ticking, Destroyable, PersistentLocatio
         return this.location;
     }
 
-    @Override
-    public void tick() {
-
-    }
 
     @Override
     public Block getBlock() {

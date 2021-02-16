@@ -97,8 +97,4 @@ public class MagmaBlock implements Destroyable, PersistentLocation, Detectable, 
         }
     }
 
-    @Override
-    public void tick() {
-
-    }
 }

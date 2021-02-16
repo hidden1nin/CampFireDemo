@@ -2,10 +2,9 @@ package com.hiddentech.campfiredemo;
 
 import com.hiddentech.grid.GridPlugin;
 import com.hiddentech.grid.events.PlayerObjectRangeEvent;
-import com.hiddentech.grid.objects.Holos.SingleHologram;
-import com.hiddentech.grid.objects.Inventoried;
+import com.hiddentech.grid.objects.Holos.IHologram;
+import com.hiddentech.grid.objects.Inventory.Inventoried;
 import com.hiddentech.grid.objects.Ranged;
-import com.hiddentech.grid.objects.block.Destroyable;
 import com.hiddentech.grid.objects.block.Interactable;
 import com.hiddentech.grid.objects.block.PistonBreakable;
 import com.hiddentech.grid.objects.ticking.Ticking;
@@ -28,15 +27,15 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
-public class Beacon implements SingleHologram, Interactable, PistonBreakable, Ranged, Ticking, Inventoried, PersistentLocation {
+public class Beacon implements IHologram, Interactable, PistonBreakable, Ranged, Ticking, Inventoried, PersistentLocation {
     private Location location;
     private Block block;
-    private Entity hologram;
     private Boolean loaded;
-
-    private BukkitTask spinner;
+    private final ArrayList<Hologram> hologram= new ArrayList<>();
+    //private BukkitTask spinner;
     private Inventory inventory;
     private  PotionEffect effect;
     private int id;
@@ -45,9 +44,11 @@ public class Beacon implements SingleHologram, Interactable, PistonBreakable, Ra
         this.block = objectData.getLocation().getBlock();
         this.location = block.getLocation();
         this.id = objectData.getId();
-        this.inventory = Bukkit.createInventory(this,9, ChatColor.GOLD+"Beacon Demo");
+        this.inventory = Bukkit.createInventory(this,9, ChatColor.GOLD+"Beacon");
         GridPlugin.getGridAPI().insertObject(this);
-        loadHolograms();
+        Hologram holo = new Hologram(location.clone().add(.5,-0.3,.5),"");
+        holo.setHelmet(new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS));
+        hologram.add(holo);
         load();
         loadInventory();
         this.effect = new PotionEffect(PotionEffectType.SPEED,100,0);
@@ -58,9 +59,11 @@ public class Beacon implements SingleHologram, Interactable, PistonBreakable, Ra
         this.block = location.getBlock();
         this.location = block.getLocation();
 
-        this.inventory = Bukkit.createInventory(this,9, ChatColor.GOLD+"Beacon Demo");
+        this.inventory = Bukkit.createInventory(this,9, ChatColor.GOLD+"Beacon");
         GridPlugin.getGridAPI().insertObject(this);
-        loadHolograms();
+        Hologram holo = new Hologram(location.clone().add(.5,-0.3,.5),"");
+        holo.setHelmet(new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS));
+        hologram.add(holo);
         load();
         loadInventory();
         this.effect = new PotionEffect(PotionEffectType.SPEED,100,0);
@@ -74,7 +77,7 @@ public class Beacon implements SingleHologram, Interactable, PistonBreakable, Ra
         ItemUtility.fillInventory(this.inventory,ItemUtility.background());
 
         ItemUtility.createItem(Material.SUGAR,this.inventory,1,ChatColor.GRAY+"Speed","");
-        ItemUtility.createItem(Material.DIAMOND_CHESTPLATE,this.inventory,4,ChatColor.GRAY+"Resistance","");
+        ItemUtility.createItem(Material.DIAMOND_PICKAXE,this.inventory,4,ChatColor.GRAY+"Haste","");
         ItemUtility.createItem(Material.DIAMOND_SWORD,this.inventory,7,ChatColor.GRAY+"Strength","");
     }
 
@@ -97,23 +100,23 @@ public class Beacon implements SingleHologram, Interactable, PistonBreakable, Ra
     @Override
     public void load() {
     unload();
-    this.spinner = spin();
+    //this.spinner = spin();
     this.loaded = true;
     }
-
+/*
     private BukkitTask spin() {
         return new BukkitRunnable() {
             @Override
             public void run() {
                 hologram.setRotation(hologram.getLocation().getYaw() + 8, 0);
         }}.runTaskTimer(CampFireDemo.getPlugin(), 2, 3);
-    }
+    }*/
 
     @Override
     public void unload() {
-        if (this.spinner != null) {
+        /*if (this.spinner != null) {
             this.spinner.cancel();
-        }
+        }*/
         this.loaded = false;
     }
 
@@ -126,7 +129,6 @@ public class Beacon implements SingleHologram, Interactable, PistonBreakable, Ra
     @Override
     public void destroy() {
         unload();
-        unloadHolograms();
         GridPlugin.getGridAPI().removeObject(this);
         Persistence.getApi().delete("Beacons",this);
     }
@@ -136,7 +138,7 @@ public class Beacon implements SingleHologram, Interactable, PistonBreakable, Ra
         return this.location;
     }
 
-
+/*
     @Override
     public void loadHolograms() {
         this.hologram =Hologram.createHologram(location.clone().add(0.5,-.3,0.5),"",new ItemStack(Material.LAPIS_BLOCK));
@@ -153,7 +155,7 @@ public class Beacon implements SingleHologram, Interactable, PistonBreakable, Ra
     public Entity currentHolograms() {
         return this.hologram;
     }
-
+*/
     @Override
     public void run(PlayerInteractEvent playerInteractEvent) {
         if(playerInteractEvent.getAction()!= Action.RIGHT_CLICK_BLOCK)return;
@@ -199,10 +201,6 @@ public class Beacon implements SingleHologram, Interactable, PistonBreakable, Ra
         event.getObject().getLocation().getWorld().spawnParticle(Particle.VILLAGER_ANGRY,event.getObject().getLocation().clone().add(.5,1,.5),5);
     }
 
-    @Override
-    public void tick() {
-        //
-    }
 
     @Override
     public void run(InventoryClickEvent inventoryClickEvent) {
@@ -211,12 +209,16 @@ public class Beacon implements SingleHologram, Interactable, PistonBreakable, Ra
         if(inventoryClickEvent.getCurrentItem().getType()==Material.SUGAR){
             this.effect = new PotionEffect(PotionEffectType.SPEED,100,0);
             inventoryClickEvent.getWhoClicked().sendMessage(ChatColor.GRAY+"Selected Speed");}
-        if(inventoryClickEvent.getCurrentItem().getType()==Material.DIAMOND_CHESTPLATE){
-            this.effect = new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,100,0);
-            inventoryClickEvent.getWhoClicked().sendMessage(ChatColor.GRAY+"Selected Resistance");}
+        if(inventoryClickEvent.getCurrentItem().getType()==Material.DIAMOND_PICKAXE){
+            this.effect = new PotionEffect(PotionEffectType.FAST_DIGGING,100,0);
+            inventoryClickEvent.getWhoClicked().sendMessage(ChatColor.GRAY+"Selected Haste");}
         if(inventoryClickEvent.getCurrentItem().getType()==Material.DIAMOND_SWORD){
             inventoryClickEvent.getWhoClicked().sendMessage(ChatColor.GRAY+"Selected Strength");
             this.effect = new PotionEffect(PotionEffectType.INCREASE_DAMAGE,100,0);}
     }
 
+    @Override
+    public ArrayList<Hologram> currentHolograms() {
+        return this.hologram;
+    }
 }

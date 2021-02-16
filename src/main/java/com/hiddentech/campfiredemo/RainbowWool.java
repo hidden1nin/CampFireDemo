@@ -1,29 +1,17 @@
 package com.hiddentech.campfiredemo;
 
 import com.hiddentech.grid.GridPlugin;
-import com.hiddentech.grid.events.PlayerObjectRangeEvent;
-import com.hiddentech.grid.objects.Inventoried;
-import com.hiddentech.grid.objects.Ranged;
 import com.hiddentech.grid.objects.block.PistonBreakable;
-import com.hiddentech.grid.objects.ticking.Ticking;
+import com.hiddentech.grid.objects.ticking.Tickable;
 import com.hiddentech.persistantance.ObjectData;
 import com.hiddentech.persistantance.Persistence;
 import com.hiddentech.persistantance.types.PersistentLocation;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.data.type.Switch;
-import org.bukkit.entity.Entity;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitTask;
 
-public class RainbowWool implements PistonBreakable, Ticking, PersistentLocation {
+public class RainbowWool implements PistonBreakable, Tickable, PersistentLocation {
     private Location location;
     private Block block;
     private Boolean loaded;

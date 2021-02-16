@@ -57,17 +57,17 @@ public class HeartyBreakfast implements CustomItem, Edible, ShapedCustomCraft {
     public ArrayList<String> getRecipe() {
         ArrayList<String> items = new ArrayList<>();
         //
-        items.add("");
+        items.add(null);
         items.add("APPLE-JUICE");
-        items.add("");
+        items.add(null);
         //
-        items.add("");
+        items.add(null);
         items.add("SCRAMBLED-EGG");
-        items.add("");
+        items.add(null);
         //
-        items.add("");
+        items.add(null);
         items.add("BOWL");
-        items.add("");
+        items.add(null);
         return items;
     }
 }
